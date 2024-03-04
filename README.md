@@ -1,2 +1,2 @@
 # zenalloc
-## An alternative to `alloc` that is guaranteed to never panic
+## An alternative to the standard Rust `alloc` crate that is guaranteed to never panic 
