@@ -1,27 +1,28 @@
-use std::ptr;
-use std::mem;
-use std::alloc::Layout;
+#![no_std]
 
-pub struct Box<T> {
+use core::ptr;
+use core::alloc::Layout;
+
+pub struct Box<T, A: Allocator> {
     ptr: *mut T,
-    alloc: Box<dyn Alloc>
+    _marker: core::marker::PhantomData<A>,
 }
 
-impl<T> Box<T> {
-    pub fn new(value: T, alloc: Box<dyn Alloc>) -> Self {
-        let ptr = alloc.alloc(mem::size_of::<T>()) as *mut T;
+impl<T, A: Allocator> Box<T, A> {
+    pub fn new(value: T) -> Self {
+        let ptr = A::alloc(Layout::new::<T>()) as *mut T;
         unsafe {
             ptr::write(ptr, value);
         }
-        Box { ptr, alloc }
+        Box { ptr, _marker: core::marker::PhantomData }
     }
 }
 
-impl<T> Drop for Box<T> {
+impl<T, A: Allocator> Drop for Box<T, A> {
     fn drop(&mut self) {
         unsafe {
             ptr::drop_in_place(self.ptr);
-            self.alloc.dealloc(self.ptr as *mut u8, mem::size_of::<T>());
+            A::dealloc(self.ptr as *mut u8, Layout::new::<T>());
         }
     }
 }
